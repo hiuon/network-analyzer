@@ -1,0 +1,7 @@
+output/
+app*
+go.mod
+go.sum
+.idea/
+/frontend
+
