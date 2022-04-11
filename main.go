@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+	sniffer "Network_Monitor/sniffer"
 )
 
 func main() {
-	fmt.Println("Hello world!")
+	sniffer.StartSniffer()
 }
