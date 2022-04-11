@@ -31,7 +31,7 @@ func StartSniffer() {
 func printData(device string) {
 	var stats []dataStats
 	hurstParam := [4]float64{}
-	hurstCov := 0.0
+	hurstCov := [4]float64{}
 	//hurstDisp := [4]float64{}
 	handle, err = pcap.OpenLive(device, int32(snapshotLen), promiscuous, timeout)
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
@@ -48,16 +48,19 @@ func printData(device string) {
 			log.Println(count, "Error:", err)
 			if count%6 == 0 {
 				getHRSReal(stats, count, &hurstParam, 0, 6)
+				hurstCov[0] = getHCov(stats, count, 6)
 			}
 			if count%12 == 0 {
 				getHRSReal(stats, count, &hurstParam, 1, 12)
+				hurstCov[1] = getHCov(stats, count, 12)
 			}
 			if count%24 == 0 {
 				getHRSReal(stats, count, &hurstParam, 2, 24)
+				hurstCov[2] = getHCov(stats, count, 24)
 			}
 			if count%48 == 0 {
 				getHRSReal(stats, count, &hurstParam, 3, 48)
-				hurstCov = getHCov(stats, count, 48)
+				hurstCov[3] = getHCov(stats, count, 48)
 			}
 			fmt.Println(hurstParam)
 			count += 1
@@ -68,16 +71,19 @@ func printData(device string) {
 			fmt.Println(stats[count].protocols)
 			if count%6 == 0 {
 				getHRSReal(stats, count, &hurstParam, 0, 6)
+				hurstCov[0] = getHCov(stats, count, 6)
 			}
 			if count%12 == 0 {
 				getHRSReal(stats, count, &hurstParam, 1, 12)
+				hurstCov[1] = getHCov(stats, count, 12)
 			}
 			if count%24 == 0 {
 				getHRSReal(stats, count, &hurstParam, 2, 24)
+				hurstCov[2] = getHCov(stats, count, 24)
 			}
 			if count%48 == 0 {
 				getHRSReal(stats, count, &hurstParam, 3, 48)
-				hurstCov = getHCov(stats, count, 48)
+				hurstCov[3] = getHCov(stats, count, 48)
 			}
 			fmt.Println(hurstParam)
 			fmt.Println("Cov data: ", hurstCov)
@@ -99,7 +105,7 @@ func getDeviceName() string {
 	for index, device := range devices {
 		fmt.Println("\n", index+1, "-> Name: ", device.Name)
 		fmt.Println("Description: ", device.Description)
-		fmt.Println("Devices addresses: ", device.Description)
+		fmt.Println("Devices addresses: ")
 		for _, address := range device.Addresses {
 			fmt.Println("- IP address: ", address.IP)
 			fmt.Println("- Subnet mask: ", address.Netmask)

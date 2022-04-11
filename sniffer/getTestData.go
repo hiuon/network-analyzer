@@ -19,12 +19,20 @@ func writeTestFile() string {
 		return ""
 	}
 	if answer == "y" {
-		fmt.Println("Enter number of minutes for test: ")
 		var duration int
-		_, err := fmt.Scanln(&duration)
-		if err != nil {
-			return ""
+		for {
+			fmt.Println("Enter number of minutes for test (4, 8, 12 .... ): ")
+			_, err := fmt.Scanln(&duration)
+			if err != nil {
+				return ""
+			}
+			if duration%4 != 0 {
+				fmt.Println("Please reenter time...")
+			} else {
+				break
+			}
 		}
+
 		f, _ := os.Create("test.pcap")
 		w := pcapgo.NewWriter(f)
 		err = w.WriteFileHeader(snapshotLen, layers.LinkTypeEthernet)
