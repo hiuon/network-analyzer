@@ -22,12 +22,12 @@ func writeTestFile() string {
 	if answer == "y" {
 		var duration int
 		for {
-			fmt.Println("Enter number of minutes for test (4, 8, 12 .... ): ")
+			fmt.Println("Enter number of minutes for test (8, 12 .... ): ")
 			_, err := fmt.Scanln(&duration)
 			if err != nil {
 				return ""
 			}
-			if duration%4 != 0 {
+			if duration%4 != 0 && duration != 4 {
 				fmt.Println("Please reenter time...")
 			} else {
 				break
