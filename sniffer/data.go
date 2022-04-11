@@ -5,6 +5,12 @@ import (
 	"net"
 )
 
+type hParam struct {
+	hRS       []float64
+	hCov      []float64
+	timestamp string
+}
+
 type dataStats struct {
 	srcPort   map[int]int
 	dstPort   map[int]int

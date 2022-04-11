@@ -23,8 +23,7 @@ func StartSniffer() {
 	device := getDeviceName()
 	testFilePath := writeTestFile()
 	fmt.Println("Test file is", testFilePath)
-	testStats := getTestDataFromFile()
-	fmt.Println(testStats)
+	getTestHParam(testFilePath)
 	printData(device)
 }
 
@@ -46,46 +45,47 @@ func printData(device string) {
 			break
 		} else if err != nil {
 			log.Println(count, "Error:", err)
-			if count%6 == 0 {
-				getHRSReal(stats, count, &hurstParam, 0, 6)
+			if (count+1)%6 == 0 {
+				hurstParam[0] = getHRSReal(stats, count, 6)
 				hurstCov[0] = getHCov(stats, count, 6)
 			}
-			if count%12 == 0 {
-				getHRSReal(stats, count, &hurstParam, 1, 12)
+			if (count+1)%12 == 0 {
+				hurstParam[1] = getHRSReal(stats, count, 12)
 				hurstCov[1] = getHCov(stats, count, 12)
 			}
-			if count%24 == 0 {
-				getHRSReal(stats, count, &hurstParam, 2, 24)
+			if (count+1)%24 == 0 {
+				hurstParam[2] = getHRSReal(stats, count, 24)
 				hurstCov[2] = getHCov(stats, count, 24)
 			}
-			if count%48 == 0 {
-				getHRSReal(stats, count, &hurstParam, 3, 48)
+			if (count+1)%48 == 0 {
+				hurstParam[3] = getHRSReal(stats, count, 48)
 				hurstCov[3] = getHCov(stats, count, 48)
 			}
-			fmt.Println(hurstParam)
+			fmt.Println("RS data: ", hurstParam)
+			fmt.Println("Cov data: ", hurstCov)
 			count += 1
 			stats = append(stats, dataStats{})
 			initData(stats, count)
 			continue
 		} else if packet.Metadata().Timestamp.Unix()-currentTime > int64(6*(count+1)) {
 			fmt.Println(stats[count].protocols)
-			if count%6 == 0 {
-				getHRSReal(stats, count, &hurstParam, 0, 6)
+			if (count+1)%6 == 0 {
+				hurstParam[0] = getHRSReal(stats, count, 6)
 				hurstCov[0] = getHCov(stats, count, 6)
 			}
-			if count%12 == 0 {
-				getHRSReal(stats, count, &hurstParam, 1, 12)
+			if (count+1)%12 == 0 {
+				hurstParam[1] = getHRSReal(stats, count, 12)
 				hurstCov[1] = getHCov(stats, count, 12)
 			}
-			if count%24 == 0 {
-				getHRSReal(stats, count, &hurstParam, 2, 24)
+			if (count+1)%24 == 0 {
+				hurstParam[2] = getHRSReal(stats, count, 24)
 				hurstCov[2] = getHCov(stats, count, 24)
 			}
-			if count%48 == 0 {
-				getHRSReal(stats, count, &hurstParam, 3, 48)
+			if (count+1)%48 == 0 {
+				hurstParam[3] = getHRSReal(stats, count, 48)
 				hurstCov[3] = getHCov(stats, count, 48)
 			}
-			fmt.Println(hurstParam)
+			fmt.Println("RS data: ", hurstParam)
 			fmt.Println("Cov data: ", hurstCov)
 			count += 1
 			stats = append(stats, dataStats{})

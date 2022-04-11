@@ -69,11 +69,11 @@ func getHRS(stats []dataStats, time int, data *[4]float64, hurstdisp *[4]float64
 	hurstdisp[item] = disp
 }
 
-func getHRSReal(stats []dataStats, index int, data *[4]float64, hurstIndex int, length int) {
+func getHRSReal(stats []dataStats, index int, length int) float64 {
 	ds := make([]int, length)
 	for i := 0; i < length; i++ {
 		if index-length < 0 {
-			return
+			return 0.0
 		}
 		ds[i] = stats[index-length+i].protocols["IPv4"]
 	}
@@ -113,7 +113,7 @@ func getHRSReal(stats []dataStats, index int, data *[4]float64, hurstIndex int, 
 	} else {
 		statH = math.Log10(statR/statS) / math.Log10(float64(length)*0.5)
 	}
-	data[hurstIndex] = statH
+	return statH
 }
 
 func getHCov(stats []dataStats, index int, length int) float64 {
