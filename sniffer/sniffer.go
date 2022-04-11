@@ -1,4 +1,4 @@
-package main
+package sniffer
 
 import (
 	"fmt"
@@ -18,20 +18,24 @@ var (
 	snapshotLen uint32 = 2048
 )
 
-func main() {
+func StartSniffer() {
 
 	device := getDeviceName()
+	testFilePath := writeTestFile()
+	fmt.Println("Test file is", testFilePath)
+	testStats := getTestDataFromFile()
+	fmt.Println(testStats)
 	printData(device)
-
 }
 
 func printData(device string) {
 	var stats []dataStats
-
+	hurstParam := [4]float64{}
+	hurstCov := 0.0
+	//hurstDisp := [4]float64{}
 	handle, err = pcap.OpenLive(device, int32(snapshotLen), promiscuous, timeout)
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	count := 0
-	//length := 0
 	currentTime := time.Now().Unix()
 	stats = append(stats, dataStats{})
 	initData(stats, 0)
@@ -42,18 +46,47 @@ func printData(device string) {
 			break
 		} else if err != nil {
 			log.Println(count, "Error:", err)
+			if count%6 == 0 {
+				getHRSReal(stats, count, &hurstParam, 0, 6)
+			}
+			if count%12 == 0 {
+				getHRSReal(stats, count, &hurstParam, 1, 12)
+			}
+			if count%24 == 0 {
+				getHRSReal(stats, count, &hurstParam, 2, 24)
+			}
+			if count%48 == 0 {
+				getHRSReal(stats, count, &hurstParam, 3, 48)
+				hurstCov = getHCov(stats, count, 48)
+			}
+			fmt.Println(hurstParam)
 			count += 1
 			stats = append(stats, dataStats{})
 			initData(stats, count)
 			continue
-		} else if packet.Metadata().Timestamp.Unix()-currentTime > int64(5*(count+1)) {
+		} else if packet.Metadata().Timestamp.Unix()-currentTime > int64(6*(count+1)) {
+			fmt.Println(stats[count].protocols)
+			if count%6 == 0 {
+				getHRSReal(stats, count, &hurstParam, 0, 6)
+			}
+			if count%12 == 0 {
+				getHRSReal(stats, count, &hurstParam, 1, 12)
+			}
+			if count%24 == 0 {
+				getHRSReal(stats, count, &hurstParam, 2, 24)
+			}
+			if count%48 == 0 {
+				getHRSReal(stats, count, &hurstParam, 3, 48)
+				hurstCov = getHCov(stats, count, 48)
+			}
+			fmt.Println(hurstParam)
+			fmt.Println("Cov data: ", hurstCov)
 			count += 1
 			stats = append(stats, dataStats{})
 			initData(stats, count)
 		}
 		//fmt.Println(packet.Metadata().Timestamp.Unix())
 		printPacketInfo(packet, stats, count) // Do something with each packet.
-		fmt.Println(len(stats))
 	}
 }
 
@@ -105,9 +138,7 @@ func printPacketInfo(packet gopacket.Packet, data []dataStats, index int) {
 		udp, _ := udpLayer.(*layers.UDP)
 		writeStatsPort(int(udp.SrcPort), int(udp.DstPort), data, index)
 	}
-
 	if err := packet.ErrorLayer(); err != nil {
 		fmt.Println("Error decoding some part of the packet:", err)
 	}
-
 }
