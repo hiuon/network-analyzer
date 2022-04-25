@@ -6,6 +6,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/pcapgo"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -48,58 +49,40 @@ func writeTestFile() string {
 		}
 		defer handle.Close()
 
+		count := 0
 		start := time.Now()
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-		for packet := range packetSource.Packets() {
-			err := w.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
-			if err != nil {
-				return ""
+		for {
+			packet, err := packetSource.NextPacket()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				log.Println("Error:", err)
+				fmt.Println("Remaining", duration*60-int(time.Since(start).Seconds()), "seconds")
+				continue
 			}
 			if time.Since(start).Minutes() > float64(duration) {
 				break
 			}
+			if float64((count+1)*5) < time.Since(start).Seconds() {
+				fmt.Println("Remaining", duration*60-int(time.Since(start).Seconds()), "seconds")
+				count++
+			}
+			err = w.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+			if err != nil {
+				return ""
+			}
 		}
-
 	}
 	return "test.pcap"
 }
 
-func getTestDataFromFile() []dataStats {
-	handle, err = pcap.OpenOffline("test.pcap")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer handle.Close()
-	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
-	flagTime := false
-	seconds := 0
-	var start time.Time
-	var stats []dataStats
-	stats = append(stats, dataStats{})
-	initData(stats, 0)
-	for packet := range packetSource.Packets() {
-		if !flagTime {
-			start = packet.Metadata().Timestamp
-			flagTime = true
-		}
-
-		if packet.Metadata().Timestamp.Sub(start).Seconds() > float64((seconds+1)*6) {
-			seconds++
-			stats = append(stats, dataStats{})
-			initData(stats, seconds)
-		}
-
-		printPacketInfo(packet, stats, seconds)
-	}
-	return stats
-}
-
 func getTestHParam(filepath string) {
 	var stats []dataStats
-	hurstRS := [4]float64{}
-	hurstCov := [4]float64{}
-	hurstRSDisp := [4]float64{}
-	hurstCovDisp := [4]float64{}
+	//hurstRS := [4]float64{}
+	//hurstCov := [4]float64{}
+	//hurstRSDisp := [4]float64{}
+	//hurstCovDisp := [4]float64{}
 
 	var hurstRS1 []float64
 	var hurstRS2 []float64

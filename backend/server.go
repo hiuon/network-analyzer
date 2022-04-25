@@ -1,6 +1,7 @@
-package main
+package backend
 
 import (
+	sniffer "Network_Monitor/sniffer"
 	"context"
 	"flag"
 	"fmt"
@@ -23,7 +24,7 @@ var (
 	healthy    int32
 )
 
-func main() {
+func StartBackend() {
 	flag.StringVar(&listenAddr, "listen-addr", ":5000", "server listen address")
 	flag.Parse()
 
@@ -78,7 +79,12 @@ func main() {
 
 func index() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
+		if r.URL.Path == "/devices" {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.Header().Set("X-Content-Type-Options", "nosniff")
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprintln(w, sniffer.GetDevicesJSON())
+		} else if r.URL.Path != "/" {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 			return
 		}

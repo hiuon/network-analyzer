@@ -72,10 +72,10 @@ func getHRS(stats []dataStats, time int, data *[4]float64, hurstdisp *[4]float64
 func getHRSReal(stats []dataStats, index int, length int) float64 {
 	ds := make([]int, length)
 	for i := 0; i < length; i++ {
-		if index-length < 0 {
+		if index-length+1 < 0 {
 			return 0.0
 		}
-		ds[i] = stats[index-length+i].protocols["IPv4"]
+		ds[i] = stats[index-length+i+1].protocols["IPv4"]
 	}
 	// Get max and min values for each interval
 	// Вычисляем размах для каждого интервала
@@ -119,10 +119,10 @@ func getHRSReal(stats []dataStats, index int, length int) float64 {
 func getHCov(stats []dataStats, index int, length int) float64 {
 	ds := make([]int, length)
 	for i := 0; i < length; i++ {
-		if index-length < 0 {
+		if index-length+1 < 0 {
 			return 0.0
 		}
-		ds[i] = stats[index-length+i].protocols["IPv4"]
+		ds[i] = stats[index-length+i+1].protocols["IPv4"]
 	}
 
 	statMean := 0.0

@@ -6,9 +6,16 @@ import (
 )
 
 type hParam struct {
-	hRS       []float64
-	hCov      []float64
-	timestamp string
+	h          float64
+	highBorder float64
+	lowBorder  float64
+	timestamp  string
+}
+
+type deviceStruct struct {
+	Name string
+	IPv4 string
+	Mask string
 }
 
 type dataStats struct {
