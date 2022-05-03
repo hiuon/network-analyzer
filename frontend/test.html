@@ -8,7 +8,22 @@
     return data;
     }
     var _data = fetchAsync("http://localhost:5000/devices");
+    var select = document.createElement("select");
     console.log(_data)
+    Promise.all([_data]).then(
+            res => res.forEach((arrObj) => {
+              var option = document.createElement("option");
+              option.value = JSON.parse(arrObj.Name);
+              option.text = JSON.parse(arrObj.IPv4)
+              select.appendChild(option);
+            })
+    )
+      var label = document.createElement("label");
+      label.innerHTML = "--- Select device ---"
+      label.htmlFor = "dev";
+
+      document.getElementById("container").appendChild(label).appendChild(select);
+
 
   </script>
   <script type="text/javascript" src="./charts/loader.js"></script>
@@ -93,19 +108,12 @@
 <body>
   <div id="chartBlock"></div>
   <div id="confBlock"></div>
-  <div>
-    <form action="#">
-      <label for="lang">Device</label>
-      <select class="form-control" name="device" id="dev">
-        <option value="">---Select---</option>
-      </select>
-      <input type="submit" value="Submit" />
+  <div id="container"></div>
       <div><input type="radio" name="interval" id="30" value="30" /><label for="30">30</label></div>
   <div><input type="radio" name="interval" id="60" value="60" /><label for="60">60</label></div>
   <div><input type="radio" name="interval" id="120" value="120" /><label for="120s">120</label></div>
   <div><input type="radio" name="interval" id="240" value="240" /><label for="240">240</label></div>
-</form>
-  </div>
+
 </body>
 </html>
 

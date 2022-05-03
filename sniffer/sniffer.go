@@ -248,12 +248,11 @@ func GetDevicesJSON() string {
 		temp[index].Name = device.Description
 		fmt.Println("- Subnet mask: ", device.Name)
 		for _, address := range device.Addresses {
-			fmt.Println("- IP address: ", address.IP)
-			fmt.Println("- Subnet mask: ", address.Netmask)
 			temp[index].IPv4 = address.IP.String()
 			temp[index].Mask = address.Netmask.String()
 		}
 	}
+	fmt.Println(time.Now())
 	jsonData, err := json.Marshal(temp)
 	if err != nil {
 		log.Fatal(err)
@@ -284,6 +283,20 @@ func GetHurstParamJSON(index int, cal int) string {
 	}
 	fmt.Println("1:", string(jsonData))
 	return string(jsonData)
+}
+
+func StartSnifferFromWeb() string {
+	go loop()
+	return "{}"
+}
+
+func loop() {
+	i := 0
+	for {
+		time.Sleep(2 * time.Second)
+		i++
+		fmt.Println(i)
+	}
 }
 
 func printPacketInfo(packet gopacket.Packet, data []dataStats, index int) {

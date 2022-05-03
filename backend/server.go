@@ -13,7 +13,7 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 
 func startSnifferFromWeb(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
-	fmt.Fprintln(w, sniffer.GetDevicesJSON())
+	fmt.Fprintln(w, sniffer.StartSnifferFromWeb())
 }
 
 func StartBackend() {
