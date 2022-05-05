@@ -13,12 +13,33 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 
 func startSnifferFromWeb(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
+	query := r.URL.Query()
+	deviceName := query.Get("deviceName")
+	fmt.Println(deviceName)
 	fmt.Fprintln(w, sniffer.StartSnifferFromWeb())
 }
 
 func getCurrentParameters(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
-	fmt.Fprintln(w, sniffer.GetDevicesJSON())
+	query := r.URL.Query()
+	typeH := query.Get("type")
+	timeInterval := query.Get("interval")
+	if timeInterval == "" || typeH == "" {
+		w.WriteHeader(444)
+		fmt.Fprintln(w, "smth wrong with parameters...")
+		return
+	}
+	timeInt := 0
+	if timeInterval == "30" {
+		timeInt = 0
+	} else if timeInterval == "60" {
+		timeInt = 1
+	} else if timeInterval == "120" {
+		timeInt = 2
+	} else if timeInterval == "240" {
+		timeInt = 3
+	}
+	fmt.Fprintln(w, sniffer.GetHurstParamJSON(timeInt, typeH))
 }
 
 func StartBackend() {

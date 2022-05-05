@@ -1,31 +1,6 @@
 <html>
 <head>
   <title>Network Monitor</title>
-  <script type="text/javascript">
-    async function fetchAsync (url) {
-    let response = await fetch(url);
-    let data = await response.json();
-    return data;
-    }
-    var _data = fetchAsync("http://localhost:5000/devices");
-    var select = document.createElement("select");
-    console.log(_data)
-    Promise.all([_data]).then(
-            res => res.forEach((arrObj) => {
-              var option = document.createElement("option");
-              option.value = JSON.parse(arrObj.Name);
-              option.text = JSON.parse(arrObj.IPv4)
-              select.appendChild(option);
-            })
-    )
-      var label = document.createElement("label");
-      label.innerHTML = "--- Select device ---"
-      label.htmlFor = "dev";
-
-      document.getElementById("container").appendChild(label).appendChild(select);
-
-
-  </script>
   <script type="text/javascript" src="./charts/loader.js"></script>
   <script type="text/javascript">
       google.charts.load('current', {'packages':['corechart', 'line', 'controls'], callback: this.drawChart});
@@ -106,14 +81,61 @@
   </script>
 </head>
 <body>
-  <div id="chartBlock"></div>
-  <div id="confBlock"></div>
-  <div id="container"></div>
+  <div id="container">
+    <div id="chartBlock"></div>
+    <div id="radioTime">
       <div><input type="radio" name="interval" id="30" value="30" /><label for="30">30</label></div>
-  <div><input type="radio" name="interval" id="60" value="60" /><label for="60">60</label></div>
-  <div><input type="radio" name="interval" id="120" value="120" /><label for="120s">120</label></div>
-  <div><input type="radio" name="interval" id="240" value="240" /><label for="240">240</label></div>
+      <div><input type="radio" name="interval" id="60" value="60" /><label for="60">60</label></div>
+      <div><input type="radio" name="interval" id="120" value="120" /><label for="120">120</label></div>
+      <div><input type="radio" name="interval" id="240" value="240" /><label for="240">240</label></div>
+    </div>
+  </div>
+  <div id="confBlock">
+    <select id="mySelect"></select>
+  </div>
+
+  <div id="hurstType">
+    <div><input type="radio" name="type" id="RS" value="1" /><label for="RS">RS</label></div>
+    <div><input type="radio" name="type" id="Cov" value="0" /><label for="Cov">Cov</label></div>
+  </div>
+
+  <button type="button" onclick="startSniffer()">Start!</button>
+
 
 </body>
+<script type="text/javascript" defer>
+  async function fetchAsync (url) {
+    let response = await fetch(url);
+    let data = await response.json();
+    return data;
+  }
+  var _data = fetchAsync("http://localhost:5000/devices");
+  let devices = []
+  _data.then(result => {
+    result.forEach(device => devices.push(device))
+    var selectList = document.getElementById("mySelect");
+    for (var i = 0; i < devices.length; i++) {
+      var option = document.createElement("option");
+
+      option.setAttribute("value", devices.Name);
+      option.text = devices[i].Name +" : " + devices[i].IPv4;
+      option.value = devices[i].Name
+      selectList.appendChild(option);
+    }
+    console.log(devices.length);
+    console.log(devices);
+  });
+
+
+</script>
+<script type="text/javascript">
+  function startSniffer() {
+    var select = document.getElementById("mySelect")
+    var value = select.options[select.selectedIndex].value
+    console.log(value)
+    var _data = fetchAsync("http://localhost:5000/start?deviceName=" + value)
+
+  }
+</script>
 </html>
 

@@ -123,7 +123,6 @@ func printData(device string) {
 			}
 			fmt.Println("RS data: ", hurstRSReal)
 			fmt.Println("Cov data: ", hurstCovReal)
-			fmt.Println(GetHurstParamJSON(0, 0))
 			count += 1
 			stats = append(stats, dataStats{})
 			initData(stats, count)
@@ -200,7 +199,6 @@ func printData(device string) {
 			}
 			fmt.Println("RS data: ", hurstRSReal)
 			fmt.Println("Cov data: ", hurstCovReal)
-			fmt.Println(GetHurstParamJSON(0, 0))
 			count += 1
 			stats = append(stats, dataStats{})
 			initData(stats, count)
@@ -260,10 +258,10 @@ func GetDevicesJSON() string {
 	return string(jsonData)
 }
 
-func GetHurstParamJSON(index int, cal int) string {
+func GetHurstParamJSON(index int, cal string) string {
 	var temp []hParam
 	for i := 0; i < 20; i++ {
-		if cal == 1 {
+		if cal == "1" {
 			if i+len(hurstCovRealAll[index]) < 20 {
 				continue
 			}
@@ -276,12 +274,12 @@ func GetHurstParamJSON(index int, cal int) string {
 		}
 
 	}
-	fmt.Println(temp)
+	//fmt.Println(temp)
 	jsonData, err := json.Marshal(temp)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("1:", string(jsonData))
+	//fmt.Println("1:", string(jsonData))
 	return string(jsonData)
 }
 
