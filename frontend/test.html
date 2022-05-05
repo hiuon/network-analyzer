@@ -1,0 +1,173 @@
+<html>
+<head>
+  <title>Network Monitor</title>
+  <script type="text/javascript" src="./charts/loader.js"></script>
+  <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart', 'line', 'controls'], callback: this.drawChart});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Time');
+        data.addColumn('number', 'High border');
+        data.addColumn('number', 'Low border');
+        data.addColumn('number', 'Real');
+        data.addColumn('number', 'RealRS');
+        data.addRows([
+          ['13:20:00\n 22/04/2022',  0.88, 0.65, 0.743252353532, 0.753252353532],
+          ['13:20:06\n 22/04/2022',  0.88, 0.65, 0.7232532523542, 0.753252353532],
+          ['13:20:12\n 22/04/2022',  0.88, 0.65, 0.7523542513123, 0.753252353532],
+          ['13:20:18\n 22/04/2022',  0.88, 0.65, 0.635325324141, 0.753252353532],
+          ['13:20:24\n 22/04/2022',  0.88, 0.65, 0.7325324314134, 0.753252353532],
+          ['13:20:30\n 22/04/2022',  0.88, 0.65, 0.79523542423, 0.753252353532],
+          ['13:20:36\n 22/04/2022',  0.88, 0.65, 0.732532534141, 0.753252353532],
+          ['13:20:42\n 22/04/2022',  0.88, 0.65, 0.72325325241, 0.753252353532],
+          ['13:20:48\n 22/04/2022',  0.88, 0.65, 0.7531531656, 0.753252353532],
+          ['13:20:54\n 22/04/2022',  0.88, 0.65, 0.63356475853, 0.753252353532],
+          ['13:21:00\n 22/04/2022',  0.88, 0.65, 0.74378649876, 0.753252353532],
+          ['13:21:06\n 22/04/2022',  0.88, 0.65, 0.796578647634, 0.753252353532]
+          ]);
+          var options = {
+              'width': 1200,
+              'height': 500,
+              'title' : 'Network Monitoring',
+              hAxis: {
+                title: 'Time'
+              },
+              vAxis: {
+                title: 'Hurst Parameter'
+              },
+              series: {
+                0: { lineDashStyle: [2, 2] },
+                1: { lineDashStyle: [2, 2] }
+              },
+              pointsVisible: true	
+            }
+          var chart = new google.visualization.LineChart(document.getElementById('chartBlock'));
+          var intervals = document.getElementsByName("interval");
+          var defaultInterval = "30";
+
+
+          drawUpdatedChart({target: defaultInterval});
+          function drawUpdatedChart(sender) {
+
+            chart.draw(data, options);
+          }
+        }
+
+  </script>
+</head>
+<body>
+
+    <div id="chartBlock"></div>
+    <div id="radioTime">
+      <div><input type="radio" name="interval" id="30" value="30" /><label for="30">30</label></div>
+      <div><input type="radio" name="interval" id="60" value="60" /><label for="60">60</label></div>
+      <div><input type="radio" name="interval" id="120" value="120" /><label for="120">120</label></div>
+      <div><input type="radio" name="interval" id="240" value="240" /><label for="240">240</label></div>
+    </div>
+  <div id="confBlock">
+    <select id="mySelect"></select>
+  </div>
+
+  <div id="hurstType">
+    <div><input type="radio" name="type" id="RS" value="1" /><label for="RS">RS</label></div>
+    <div><input type="radio" name="type" id="Cov" value="0" /><label for="Cov">Cov</label></div>
+  </div>
+
+  <button type="button" onclick="startSniffer()">Start!</button>
+  <button type="button" onclick="stopSniffer()">Stop!</button>
+  <button type="button" onclick="updateData()">Update!</button>
+
+
+</body>
+<script type="text/javascript" defer>
+  async function fetchAsync (url) {
+    let response = await fetch(url);
+    let data = await response.json();
+    return data;
+  }
+  var _data = fetchAsync("http://localhost:5000/devices");
+  let devices = []
+  _data.then(result => {
+    result.forEach(device => devices.push(device))
+    var selectList = document.getElementById("mySelect");
+    for (var i = 0; i < devices.length; i++) {
+      var option = document.createElement("option");
+
+      option.setAttribute("value", devices.Name);
+      option.text = devices[i].Name +" : " + devices[i].IPv4;
+      option.value = devices[i].IPv4
+      selectList.appendChild(option);
+    }
+    console.log(devices.length);
+    console.log(devices);
+  });
+
+
+</script>
+<script type="text/javascript">
+  function startSniffer() {
+    var select = document.getElementById("mySelect")
+    var value = select.options[select.selectedIndex].value
+    console.log(value)
+    var _data = fetchAsync("http://localhost:5000/start?deviceName=" + value).then(
+
+    )
+
+  }
+
+  function stopSniffer() {
+    fetchAsync("http://localhost:5000/stop")
+  }
+
+  function updateData() {
+    var interval
+    var typeH
+    var rad1 = document.getElementsByName("interval")
+    for (var i = 0; i < rad1.length; i++) {
+      if (rad1[i].checked) interval = rad1[i].value
+    }
+    var rad2 = document.getElementsByName("type")
+    for (var i = 0; i < rad2.length; i++) {
+      if (rad2[i].checked) typeH = rad2[i].value
+    }
+    console.log(typeH + interval)
+    var parametersH = []
+    var _data = fetchAsync("http://localhost:5000/get-data?type=" + typeH + "&interval=" + interval)
+    _data.then(result => {
+              result.forEach(info => parametersH.push(info))
+      console.log(parametersH)
+      var chart = new google.visualization.LineChart(document.getElementById('chartBlock'));
+      var options = {
+        'width': 1200,
+        'height': 500,
+        'title' : 'Network Monitoring',
+        hAxis: {
+          title: 'Time'
+        },
+        vAxis: {
+          title: 'Hurst Parameter'
+        },
+        series: {
+          0: { lineDashStyle: [2, 2] },
+          1: { lineDashStyle: [2, 2] }
+        },
+        pointsVisible: true
+      }
+      var data = new google.visualization.DataTable();
+      console.log(parametersH[0])
+      data.addColumn('string', 'Time');
+      data.addColumn('number', 'High border');
+      data.addColumn('number', 'Low border');
+      data.addColumn('number', 'Real');
+      for (var i = 0; i < parametersH.length; i++) {
+        data.addRows([[parametersH[i].Timestamp, parametersH[i].HighBorder, parametersH[i].LowBorder, parametersH[i].H]])
+      }
+
+      chart.draw(data, options);
+    })
+
+  }
+</script>
+</html>
+

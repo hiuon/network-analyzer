@@ -1,9 +1,10 @@
 package main
 
 import (
-	sniffer "Network_Monitor/sniffer"
+	"Network_Monitor/backend"
 )
 
 func main() {
-	sniffer.StartSniffer()
+	//sniffer.StartSniffer()
+	backend.StartBackend()
 }
