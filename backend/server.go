@@ -15,8 +15,13 @@ func startSnifferFromWeb(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	query := r.URL.Query()
 	deviceName := query.Get("deviceName")
-	fmt.Println(deviceName)
-	fmt.Fprintln(w, sniffer.StartSnifferFromWeb())
+	//fmt.Println(deviceName)
+	fmt.Fprintln(w, sniffer.StartSnifferFromWeb(deviceName))
+}
+
+func stopSniffer(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	fmt.Fprintln(w, sniffer.StopSniffer())
 }
 
 func getCurrentParameters(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +51,7 @@ func StartBackend() {
 	http.HandleFunc("/devices", getDevices)
 	http.HandleFunc("/start", startSnifferFromWeb)
 	http.HandleFunc("/get-data", getCurrentParameters)
+	http.HandleFunc("/stop", stopSniffer)
 
 	err := http.ListenAndServe(":5000", nil)
 	if err != nil {

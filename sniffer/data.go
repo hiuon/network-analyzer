@@ -6,10 +6,10 @@ import (
 )
 
 type hParam struct {
-	H          float64
+	Timestamp  string
 	HighBorder float64
 	LowBorder  float64
-	Timestamp  string
+	H          float64
 }
 
 type deviceStruct struct {
