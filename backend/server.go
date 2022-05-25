@@ -3,7 +3,17 @@ package backend
 import (
 	"Network_Monitor/sniffer"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"strconv"
+	"time"
+)
+
+type key int
+
+const (
+	requestIDKey key = 0
 )
 
 func getDevices(w http.ResponseWriter, r *http.Request) {
@@ -22,6 +32,22 @@ func startSnifferFromWeb(w http.ResponseWriter, r *http.Request) {
 func stopSniffer(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	fmt.Fprintln(w, sniffer.StopSniffer())
+}
+
+func getTestData(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	query := r.URL.Query()
+	duration := query.Get("duration")
+	deviceName := query.Get("deviceName")
+	if duration == "" {
+		return
+	} else {
+		intVar, _ := strconv.Atoi(duration)
+		if intVar%4 == 0 {
+			fmt.Println(w, sniffer.WriteTestFileFromWeb(intVar, deviceName))
+		}
+	}
+
 }
 
 func getCurrentParameters(w http.ResponseWriter, r *http.Request) {
@@ -47,13 +73,40 @@ func getCurrentParameters(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, sniffer.GetHurstParamJSON(timeInt, typeH))
 }
 
-func StartBackend() {
-	http.HandleFunc("/devices", getDevices)
-	http.HandleFunc("/start", startSnifferFromWeb)
-	http.HandleFunc("/get-data", getCurrentParameters)
-	http.HandleFunc("/stop", stopSniffer)
+func getAnomalyCount(w http.ResponseWriter, r *http.Request) {
+	enableCors(&w)
+	fmt.Fprintln(w, sniffer.GetAnomalyCount())
+}
 
-	err := http.ListenAndServe(":5000", nil)
+func logging(targetMux http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		targetMux.ServeHTTP(w, r)
+		// log request by whom (IP address)
+		requesterIP := r.RemoteAddr
+		log.Printf(
+			"%s\t\t%s\t\t%s\t\t%v",
+			r.Method,
+			r.RequestURI,
+			requesterIP,
+			time.Since(start),
+		)
+	})
+}
+
+func StartBackend() {
+	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
+	logger.Println("Server is starting...")
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/devices", getDevices)
+	mux.HandleFunc("/start", startSnifferFromWeb)
+	mux.HandleFunc("/get-data", getCurrentParameters)
+	mux.HandleFunc("/stop", stopSniffer)
+	mux.HandleFunc("/get-test-data", getTestData)
+	mux.HandleFunc("/get-anomaly-count", getAnomalyCount)
+
+	err := http.ListenAndServe(":5000", logging(mux))
 	if err != nil {
 		return
 	}

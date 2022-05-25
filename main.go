@@ -1,8 +1,6 @@
 package main
 
-import (
-	"Network_Monitor/backend"
-)
+import "Network_Monitor/backend"
 
 func main() {
 	//sniffer.StartSniffer()

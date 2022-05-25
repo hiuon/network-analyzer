@@ -23,6 +23,10 @@ var (
 	hurstCovDisp           = [4]float64{}
 	hurstRSRealAll  [4][]hParam
 	hurstCovRealAll [4][]hParam
+	anomalyRScount  = [4]int{}
+	anomalyCovcount = [4]int{}
+	globalCountRS   = 0
+	globalCountCov  = 0
 	quit            = make(chan bool)
 )
 
@@ -33,6 +37,24 @@ func StartSniffer() {
 	fmt.Println("Test file is", testFilePath)
 	getTestHParam(testFilePath)
 	printData(device)
+}
+
+func writeDataToGlobal(index int, stats []dataStats, realCov *[4]float64, realRS *[4]float64, count int, length int) {
+	realRS[index] = getHRSReal(stats, count, length)
+	realCov[index] = getHCov(stats, count, length)
+	hurstRSRealAll[index] = append(hurstRSRealAll[index], hParam{
+		H:          realRS[index],
+		HighBorder: hurstRS[index] + 3*hurstRSDisp[index],
+		LowBorder:  hurstRS[index] - 3*hurstRSDisp[index],
+		Timestamp:  time.Now().String(),
+	})
+	hurstCovRealAll[index] = append(hurstCovRealAll[index], hParam{
+		H:          realCov[index],
+		HighBorder: hurstCov[index] + 3*hurstCovDisp[index],
+		LowBorder:  hurstCov[index] - 3*hurstCovDisp[index],
+		Timestamp:  time.Now().String(),
+	})
+	checkParameters(realRS, realCov, index, length)
 }
 
 func printData(device string) {
@@ -58,72 +80,16 @@ func printData(device string) {
 			} else if err != nil {
 				log.Println(count, "Error:", err)
 				if (count+1)%6 == 0 {
-					hurstRSReal[0] = getHRSReal(stats, count, 6)
-					hurstCovReal[0] = getHCov(stats, count, 6)
-					hurstRSRealAll[0] = append(hurstRSRealAll[0], hParam{
-						H:          hurstRSReal[0],
-						HighBorder: hurstRS[0] + 3*hurstRSDisp[0],
-						LowBorder:  hurstRS[0] - 3*hurstRSDisp[0],
-						Timestamp:  time.Now().String(),
-					})
-					hurstCovRealAll[0] = append(hurstCovRealAll[0], hParam{
-						H:          hurstCovReal[0],
-						HighBorder: hurstCov[0] + 3*hurstCovDisp[0],
-						LowBorder:  hurstCov[0] - 3*hurstCovDisp[0],
-						Timestamp:  time.Now().String(),
-					})
-					checkParameters(hurstRSReal, hurstCovReal, 0)
+					writeDataToGlobal(0, stats, &hurstCovReal, &hurstRSReal, count, 6)
 				}
 				if (count+1)%12 == 0 {
-					hurstRSReal[1] = getHRSReal(stats, count, 12)
-					hurstCovReal[1] = getHCov(stats, count, 12)
-					hurstRSRealAll[1] = append(hurstRSRealAll[1], hParam{
-						H:          hurstRSReal[1],
-						HighBorder: hurstRS[1] + 3*hurstRSDisp[1],
-						LowBorder:  hurstRS[1] - 3*hurstRSDisp[1],
-						Timestamp:  time.Now().String(),
-					})
-					hurstCovRealAll[0] = append(hurstCovRealAll[1], hParam{
-						H:          hurstCovReal[1],
-						HighBorder: hurstCov[1] + 3*hurstCovDisp[1],
-						LowBorder:  hurstCov[1] - 3*hurstCovDisp[1],
-						Timestamp:  time.Now().String(),
-					})
-					checkParameters(hurstRSReal, hurstCovReal, 1)
+					writeDataToGlobal(1, stats, &hurstCovReal, &hurstRSReal, count, 12)
 				}
 				if (count+1)%24 == 0 {
-					hurstRSReal[2] = getHRSReal(stats, count, 24)
-					hurstCovReal[2] = getHCov(stats, count, 24)
-					hurstRSRealAll[2] = append(hurstRSRealAll[2], hParam{
-						H:          hurstRSReal[2],
-						HighBorder: hurstRS[2] + 3*hurstRSDisp[2],
-						LowBorder:  hurstRS[2] - 3*hurstRSDisp[2],
-						Timestamp:  time.Now().String(),
-					})
-					hurstCovRealAll[2] = append(hurstCovRealAll[2], hParam{
-						H:          hurstCovReal[2],
-						HighBorder: hurstCov[2] + 3*hurstCovDisp[2],
-						LowBorder:  hurstCov[2] - 3*hurstCovDisp[2],
-						Timestamp:  time.Now().String(),
-					})
-					checkParameters(hurstRSReal, hurstCovReal, 2)
+					writeDataToGlobal(2, stats, &hurstCovReal, &hurstRSReal, count, 24)
 				}
 				if (count+1)%48 == 0 {
-					hurstRSReal[3] = getHRSReal(stats, count, 48)
-					hurstCovReal[3] = getHCov(stats, count, 48)
-					hurstRSRealAll[3] = append(hurstRSRealAll[3], hParam{
-						H:          hurstRSReal[0],
-						HighBorder: hurstRS[3] + 3*hurstRSDisp[3],
-						LowBorder:  hurstRS[3] - 3*hurstRSDisp[3],
-						Timestamp:  time.Now().String(),
-					})
-					hurstCovRealAll[3] = append(hurstCovRealAll[3], hParam{
-						H:          hurstCovReal[3],
-						HighBorder: hurstCov[3] + 3*hurstCovDisp[3],
-						LowBorder:  hurstCov[3] - 3*hurstCovDisp[3],
-						Timestamp:  time.Now().String(),
-					})
-					checkParameters(hurstRSReal, hurstCovReal, 3)
+					writeDataToGlobal(3, stats, &hurstCovReal, &hurstRSReal, count, 48)
 				}
 				fmt.Println("RS data: ", hurstRSReal)
 				fmt.Println("Cov data: ", hurstCovReal)
@@ -132,74 +98,18 @@ func printData(device string) {
 				initData(stats, count)
 				continue
 			} else if packet.Metadata().Timestamp.Unix()-currentTime > int64(6*(count+1)) {
-				fmt.Println(stats[count].protocols)
+				//fmt.Println(stats[count].protocols)
 				if (count+1)%6 == 0 {
-					hurstRSReal[0] = getHRSReal(stats, count, 6)
-					hurstCovReal[0] = getHCov(stats, count, 6)
-					hurstRSRealAll[0] = append(hurstRSRealAll[0], hParam{
-						H:          hurstRSReal[0],
-						HighBorder: hurstRS[0] + 3*hurstRSDisp[0],
-						LowBorder:  hurstRS[0] - 3*hurstRSDisp[0],
-						Timestamp:  time.Now().String(),
-					})
-					hurstCovRealAll[0] = append(hurstCovRealAll[0], hParam{
-						H:          hurstCovReal[0],
-						HighBorder: hurstCov[0] + 3*hurstCovDisp[0],
-						LowBorder:  hurstCov[0] - 3*hurstCovDisp[0],
-						Timestamp:  time.Now().String(),
-					})
-					checkParameters(hurstRSReal, hurstCovReal, 0)
+					writeDataToGlobal(0, stats, &hurstCovReal, &hurstRSReal, count, 6)
 				}
 				if (count+1)%12 == 0 {
-					hurstRSReal[1] = getHRSReal(stats, count, 12)
-					hurstCovReal[1] = getHCov(stats, count, 12)
-					hurstRSRealAll[1] = append(hurstRSRealAll[1], hParam{
-						H:          hurstRSReal[1],
-						HighBorder: hurstRS[1] + 3*hurstRSDisp[1],
-						LowBorder:  hurstRS[1] - 3*hurstRSDisp[1],
-						Timestamp:  time.Now().String(),
-					})
-					hurstCovRealAll[1] = append(hurstCovRealAll[1], hParam{
-						H:          hurstCovReal[1],
-						HighBorder: hurstCov[1] + 3*hurstCovDisp[1],
-						LowBorder:  hurstCov[1] - 3*hurstCovDisp[1],
-						Timestamp:  time.Now().String(),
-					})
-					checkParameters(hurstRSReal, hurstCovReal, 1)
+					writeDataToGlobal(1, stats, &hurstCovReal, &hurstRSReal, count, 12)
 				}
 				if (count+1)%24 == 0 {
-					hurstRSReal[2] = getHRSReal(stats, count, 24)
-					hurstCovReal[2] = getHCov(stats, count, 24)
-					hurstRSRealAll[2] = append(hurstRSRealAll[2], hParam{
-						H:          hurstRSReal[2],
-						HighBorder: hurstRS[2] + 3*hurstRSDisp[2],
-						LowBorder:  hurstRS[2] - 3*hurstRSDisp[2],
-						Timestamp:  time.Now().String(),
-					})
-					hurstCovRealAll[2] = append(hurstCovRealAll[2], hParam{
-						H:          hurstCovReal[2],
-						HighBorder: hurstCov[2] + 3*hurstCovDisp[2],
-						LowBorder:  hurstCov[2] - 3*hurstCovDisp[2],
-						Timestamp:  time.Now().String(),
-					})
-					checkParameters(hurstRSReal, hurstCovReal, 2)
+					writeDataToGlobal(2, stats, &hurstCovReal, &hurstRSReal, count, 24)
 				}
 				if (count+1)%48 == 0 {
-					hurstRSReal[3] = getHRSReal(stats, count, 48)
-					hurstCovReal[3] = getHCov(stats, count, 48)
-					hurstRSRealAll[3] = append(hurstRSRealAll[3], hParam{
-						H:          hurstRSReal[3],
-						HighBorder: hurstRS[3] + 3*hurstRSDisp[3],
-						LowBorder:  hurstRS[3] - 3*hurstRSDisp[3],
-						Timestamp:  time.Now().String(),
-					})
-					hurstCovRealAll[3] = append(hurstCovRealAll[3], hParam{
-						H:          hurstCovReal[3],
-						HighBorder: hurstCov[3] + 3*hurstCovDisp[3],
-						LowBorder:  hurstCov[3] - 3*hurstCovDisp[3],
-						Timestamp:  time.Now().String(),
-					})
-					checkParameters(hurstRSReal, hurstCovReal, 3)
+					writeDataToGlobal(3, stats, &hurstCovReal, &hurstRSReal, count, 48)
 				}
 				fmt.Println("RS data: ", hurstRSReal)
 				fmt.Println("Cov data: ", hurstCovReal)
@@ -249,13 +159,13 @@ func GetDevicesJSON() string {
 	for index, device := range devices {
 		temp = append(temp, deviceStruct{})
 		temp[index].Name = device.Description
-		fmt.Println("- Subnet mask: ", device.Name)
+		//fmt.Println("- Subnet mask: ", device.Name)
 		for _, address := range device.Addresses {
 			temp[index].IPv4 = address.IP.String()
 			temp[index].Mask = address.Netmask.String()
 		}
 	}
-	fmt.Println(time.Now())
+	//fmt.Println(time.Now())
 	jsonData, err := json.Marshal(temp)
 	if err != nil {
 		log.Fatal(err)
@@ -293,15 +203,6 @@ func StartSnifferFromWeb(deviceName string) string {
 	getTestHParam("test.pcap")
 	go printData(getDeviceNameFromIP(deviceName))
 	return "{}"
-}
-
-func loop() {
-	i := 0
-	for {
-		time.Sleep(2 * time.Second)
-		i++
-		fmt.Println(i)
-	}
 }
 
 func getDeviceNameFromIP(IP string) string {
@@ -353,12 +254,45 @@ func printPacketInfo(packet gopacket.Packet, data []dataStats, index int) {
 	}
 }
 
-func checkParameters(hRS [4]float64, hCov [4]float64, index int) {
-	if hRS[index] > hurstRS[index]+3*hurstRSDisp[index] || hRS[index] < hurstRS[index]-3*hurstRSDisp[index] {
+func checkParameters(hRS *[4]float64, hCov *[4]float64, index int, length int) {
+	if (hRS[index] > hurstRS[index]+3*hurstRSDisp[index] || hRS[index] < hurstRS[index]-3*hurstRSDisp[index]) && (hRS[index] > 0 && hRS[index] < 1) {
+		anomalyRScount[index] += 1
 		fmt.Println(index, "smth wrong with network (RS)")
 	}
 
-	if hCov[index] > hurstCov[index]+3*hurstCovDisp[index] || hCov[index] < hurstCov[index]-3*hurstCovDisp[index] {
+	if (hCov[index] > hurstCov[index]+3*hurstCovDisp[index] || hCov[index] < hurstCov[index]-3*hurstCovDisp[index]) && (hRS[index] > 0 && hRS[index] < 1) {
+		anomalyCovcount[index] += 1
 		fmt.Println(index, "smth wrong with network (Cov)")
 	}
+
+	fmt.Println(anomalyRScount, globalCountRS)
+	if length == 48 {
+		temp1 := 0
+		temp2 := 0
+		for i := 0; i < len(anomalyRScount); i++ {
+			temp1 += anomalyRScount[i]
+			temp2 += anomalyCovcount[i]
+		}
+		globalCountRS = temp1 - globalCountRS
+		globalCountCov = temp2 - globalCountCov
+	}
+}
+
+func GetAnomalyCount() string {
+	var temp []int
+	for i := 0; i < len(anomalyRScount); i++ {
+		temp = append(temp, anomalyRScount[i])
+	}
+	temp = append(temp, globalCountRS)
+	for i := 0; i < len(anomalyCovcount); i++ {
+		temp = append(temp, anomalyCovcount[i])
+	}
+	temp = append(temp, globalCountCov)
+
+	jsonData, err := json.Marshal(temp)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//fmt.Println("1:", string(jsonData))
+	return string(jsonData)
 }
