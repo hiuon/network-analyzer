@@ -13,6 +13,49 @@ import (
 	"time"
 )
 
+func WriteTestFileFromWeb(duration int, deviceName string) string {
+	go writeTestFileWeb(duration, deviceName)
+	return ""
+}
+
+func writeTestFileWeb(duration int, deviceName string) {
+	f, _ := os.Create("test.pcap")
+	w := pcapgo.NewWriter(f)
+	err = w.WriteFileHeader(snapshotLen, layers.LinkTypeEthernet)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	handle, err = pcap.OpenLive(getDeviceNameFromIP(deviceName), int32(snapshotLen), promiscuous, timeout)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer handle.Close()
+
+	count := 0
+	start := time.Now()
+	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+	for {
+		packet, err := packetSource.NextPacket()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			log.Println("Error:", err)
+			fmt.Println("Remaining", duration*60-int(time.Since(start).Seconds()), "seconds")
+			continue
+		}
+		if time.Since(start).Minutes() > float64(duration) {
+			break
+		}
+		if float64((count+1)*5) < time.Since(start).Seconds() {
+			fmt.Println("Remaining", duration*60-int(time.Since(start).Seconds()), "seconds")
+			count++
+		}
+		err = w.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+	}
+}
+
 func writeTestFile() string {
 	fmt.Println("Do you want to rewrite your test data file? (y/n)")
 	var answer string
@@ -108,7 +151,7 @@ func getTestHParam(filepath string) {
 
 	stats = append(stats, dataStats{})
 	initData(stats, 0)
-	fmt.Println(count)
+	//fmt.Println(count)
 	for packet := range packetSource.Packets() {
 		if !flagTime {
 			flagTime = true
@@ -133,7 +176,7 @@ func getTestHParam(filepath string) {
 				hurstCov4 = append(hurstCov4, getHCov(stats, count, 48))
 			}
 			count++
-			fmt.Println(count)
+			//fmt.Println(count)
 			stats = append(stats, dataStats{})
 			initData(stats, count)
 		}
@@ -159,10 +202,10 @@ func getTestHParam(filepath string) {
 	hurstCovDisp[2] = getDisp(hurstCov3, hurstCov[2])
 	hurstCovDisp[3] = getDisp(hurstCov4, hurstCov[3])
 
-	fmt.Println(hurstRS)
-	fmt.Println(hurstRSDisp)
-	fmt.Println(hurstCov)
-	fmt.Println(hurstCovDisp)
+	//fmt.Println(hurstRS)
+	//fmt.Println(hurstRSDisp)
+	//fmt.Println(hurstCov)
+	//fmt.Println(hurstCovDisp)
 }
 
 func getMean(data []float64) float64 {
